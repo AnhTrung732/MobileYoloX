@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">MobileYolox</string>
+    <string name="yolo_detect">YOLO Detect</string>
+</resources>

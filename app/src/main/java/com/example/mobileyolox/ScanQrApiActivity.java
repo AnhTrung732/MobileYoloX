@@ -18,7 +18,13 @@ import androidx.core.content.ContextCompat;
 import com.budiyev.android.codescanner.CodeScanner;
 import com.budiyev.android.codescanner.CodeScannerView;
 import com.budiyev.android.codescanner.DecodeCallback;
+import com.example.mobileyolox.api.ApiService;
+import com.example.mobileyolox.model.TestAPI;
 import com.google.zxing.Result;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 
 public class ScanQrApiActivity extends AppCompatActivity {
@@ -42,9 +48,30 @@ public class ScanQrApiActivity extends AppCompatActivity {
                         @Override
                         public void run() {
                             SCAN_DOMAIN = result.getText();
-                            Toast.makeText(ScanQrApiActivity.this, result.getText(), Toast.LENGTH_SHORT).show();
-                            Intent intent = new Intent(ScanQrApiActivity.this, MainActivity.class);
-                            startActivity(intent);
+                            ApiService.apiService.testResponse().enqueue(new Callback<TestAPI>() {
+                                @Override
+                                public void onResponse(Call<TestAPI> call, Response<TestAPI> response) {
+                                    if (response.isSuccessful()) {
+                                        TestAPI api = response.body();
+                                        assert api != null;
+                                        String result = api.getResponse();
+                                        if (result.equals("true"))
+                                        {
+                                            //Toast.makeText(ScanQrApiActivity.this, result.getText(), Toast.LENGTH_SHORT).show();
+                                            Intent intent = new Intent(ScanQrApiActivity.this, MainActivity.class);
+                                            startActivity(intent);
+                                        }
+                                    }
+                                }
+                                @Override
+                                public void onFailure(Call<TestAPI> call, Throwable t) {
+                                    Toast.makeText(ScanQrApiActivity.this, "Scan again please !", Toast.LENGTH_SHORT).show();
+                                    mCodeScanner.startPreview();
+                                }
+
+
+                            });
+
                         }
                     });
                 }

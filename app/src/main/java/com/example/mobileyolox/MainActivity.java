@@ -147,7 +147,7 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
             uploadAndAnalyzeImage(bitmap);
             imageProxy.close();
             try {
-                Thread.sleep(100); // sleeps for 0.3 seconds
+                Thread.sleep(50); // sleeps for 0.3 seconds
             } catch (InterruptedException e) {
                 // handle the exception here
             }
@@ -196,7 +196,11 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
                         String label = output.getClasses().get(index);
                         rectangles.add(new Pair<>(rectF,label));
                     }
-                    yoloView.setRectangles(rectangles);
+                    runOnUiThread(new Runnable() {
+                        public void run() {
+                            yoloView.setRectangles(rectangles);
+                        }
+                    });
                 }
             }
             @Override

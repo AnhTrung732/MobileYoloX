@@ -22,19 +22,24 @@ import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Paint;
+import android.graphics.PointF;
+import android.graphics.RectF;
 import android.media.Image;
 import android.os.Bundle;
 import android.util.Base64;
 import android.util.Log;
+import android.util.Pair;
 import android.util.Size;
 import android.view.View;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.example.mobileyolox.CustomImageView.CustomImageView;
 import com.example.mobileyolox.api.ApiService;
 import com.example.mobileyolox.api.Const;
 import com.example.mobileyolox.model.APIOutput;
@@ -45,6 +50,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 
@@ -58,10 +65,10 @@ import retrofit2.Response;
 
 public class MainActivity extends AppCompatActivity implements ImageAnalysis.Analyzer {
     private ListenableFuture<ProcessCameraProvider> cameraProviderFuture;
-    ImageView yoloView;
+    CustomImageView yoloView;
     PreviewView previewView;
     SwitchCompat detectSwitch;
-
+    Boolean mBoolean = false;
     @SuppressLint("MissingInflatedId")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -72,15 +79,18 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         previewView = findViewById(R.id.previewView);
         detectSwitch = findViewById(R.id.detectSwitch);
 
+
         detectSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
                 if (isChecked)
                 {
+                    mBoolean = true;
                     yoloView.setVisibility(View.VISIBLE);
                 }
                 else
                 {
+                    mBoolean = false;
                     yoloView.setVisibility(View.INVISIBLE);
                 }
             }
@@ -113,13 +123,15 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
         
         //Image analysis use case
         ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
-                .setTargetResolution(new Size(640, 360))
+                //.setTargetResolution(new Size(640, 360))
                 .setBackpressureStrategy(ImageAnalysis.STRATEGY_BLOCK_PRODUCER)
                 .build();
         
         imageAnalysis.setAnalyzer(getExecutor(), this);
         //Use image analysis
+
         cameraProvider.bindToLifecycle((LifecycleOwner) this, cameraSelector, preview, imageAnalysis);
+
     }
 
     @Override
@@ -129,15 +141,24 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
 //        {
 //
 //        }
-        final Bitmap bitmap = previewView.getBitmap();
-        uploadAndAnalyzeImage(bitmap);
-        // Close the image proxy after its use
-        imageProxy.close();
-        try {
-            Thread.sleep(500); // sleeps for 2 seconds
-        } catch (InterruptedException e) {
-            // handle the exception here
+        if (mBoolean)
+        {
+            final Bitmap bitmap = previewView.getBitmap();
+            uploadAndAnalyzeImage(bitmap);
+            imageProxy.close();
+            try {
+                Thread.sleep(100); // sleeps for 0.3 seconds
+            } catch (InterruptedException e) {
+                // handle the exception here
+            }
         }
+        else
+        {
+            imageProxy.close();
+
+        }
+        // Close the image proxy after its use
+
 
     }
 
@@ -162,19 +183,31 @@ public class MainActivity extends AppCompatActivity implements ImageAnalysis.Ana
             @Override
             public void onResponse(Call<APIOutput> call, Response<APIOutput> response) {
 
-//                APIOutput animal = response.body();
-//                if (animal != null)
-//                {
-//                    resultTv.setText(animal.getSpecies());
-//                }
+                APIOutput output = response.body();
+                if (output != null) {
+                    List<Pair<RectF, String>> rectangles = new ArrayList<>();
+                    for (int index = 0; index < output.getBoxes().size(); index++) {
+                        List<PointF> points = new ArrayList<>();
+                        PointF point1 = new PointF(output.getBoxes().get(index).get(0), output.getBoxes().get(index).get(1));
+                        PointF point2 = new PointF(output.getBoxes().get(index).get(2), output.getBoxes().get(index).get(3));
+                        points.add(point1); // Top left corner point
+                        points.add(point2); // Bottom right corner point
+                        RectF rectF = new RectF(points.get(0).x, points.get(0).y, points.get(1).x, points.get(1).y);
+                        String label = output.getClasses().get(index);
+                        rectangles.add(new Pair<>(rectF,label));
+                    }
+                    yoloView.setRectangles(rectangles);
+                }
             }
             @Override
             public void onFailure(Call<APIOutput> call, Throwable t) {
-                Toast.makeText(MainActivity.this, "Call Api failed", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(MainActivity.this, "Call Api failed", Toast.LENGTH_SHORT).show();
             }
         });
 
     }
+
+
 
     private File bitmapToFile(Bitmap bitmap) {
         // Create a file to save the image

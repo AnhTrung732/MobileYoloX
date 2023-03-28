@@ -4,11 +4,11 @@ import java.util.List;
 
 public class APIOutput {
     String time_elapsed;
-    List<Integer> boxes;
-    List<Integer> scores;
-    List<Integer> classes;
+    List<List<Float>> boxes;
+    List<Float> scores;
+    List<String> classes;
 
-    public APIOutput(String time_elapsed, List<Integer> boxes, List<Integer> scores, List<Integer> classes) {
+    public APIOutput(String time_elapsed, List<List<Float>> boxes, List<Float> scores, List<String> classes) {
         this.time_elapsed = time_elapsed;
         this.boxes = boxes;
         this.scores = scores;
@@ -23,27 +23,27 @@ public class APIOutput {
         this.time_elapsed = time_elapsed;
     }
 
-    public List<Integer> getBoxes() {
+    public List<List<Float>> getBoxes() {
         return boxes;
     }
 
-    public void setBoxes(List<Integer> boxes) {
+    public void setBoxes(List<List<Float>> boxes) {
         this.boxes = boxes;
     }
 
-    public List<Integer> getScores() {
+    public List<Float> getScores() {
         return scores;
     }
 
-    public void setScores(List<Integer> scores) {
+    public void setScores(List<Float> scores) {
         this.scores = scores;
     }
 
-    public List<Integer> getClasses() {
+    public List<String> getClasses() {
         return classes;
     }
 
-    public void setClasses(List<Integer> classes) {
+    public void setClasses(List<String> classes) {
         this.classes = classes;
     }
 }

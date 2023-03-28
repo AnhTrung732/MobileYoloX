@@ -1,6 +1,5 @@
 # MobileYoloX
 
-Project Name
 A mobile application using camera to detect objects through APIs obtained from the YOLOX model
 
 ## Technologies Used
